@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
 from pyvesc import VESC
 from pyvesc.VESC.messages import *
 
@@ -5,31 +8,57 @@ import time
 import statistics
 from construct import *
 from pprint import pprint
+from vedirect import Vedirect
 
+def driver_data_callback(packet):
+	packet_log(packet, 'driver')	
+
+def generator_data_callback(packet):
+	packet_log(packet, 'generator')
+
+def packet_log(packet, mytype):
+	try:
+		#pprint(packet)
+		voltage = int(packet.get('V', 0)) / 1000.0
+		amperage = int(packet.get('I', 0)) / 1000.0
+		wattage = int(packet.get('P', 0)) / 1000.0
+
+		print("{} {} {:.3f}V {:.3f}A {:.3f}W".format(time.time(), mytype, voltage, amperage, wattage))
+	except AttributeError as e:
+		print (e)
+
+		
 # a function to show how to use the class with a with-statement
 def test_generator_motor():
+	try:
+		driver_uuid = 0x400030001850524154373020
+		generator_uuid = 0x1c002d000550523947383920
 
-	driver_uuid = 0x400030001850524154373020
-	generator_uuid = 0x1c002d000550523947383920
+		driver_port = VESC.get_vesc_serial_port_by_uuid(driver_uuid)
+		generator_port = VESC.get_vesc_serial_port_by_uuid(generator_uuid)
+		
+		if driver_port:
+			driver = VESC(serial_port = driver_port)
+			print("Driver Firmware: ", driver.get_firmware_version(), " / UUID: ", hex(driver.uuid))
+		else:
+			print("Could not find driver.")
+			return
 
-	driver_port = VESC.get_vesc_serial_port_by_uuid(driver_uuid)
-	generator_port = VESC.get_vesc_serial_port_by_uuid(generator_uuid)
-    
-	if driver_port:
-		driver = VESC(serial_port = driver_port)
-		print("Driver Firmware: ", driver.get_firmware_version(), " / UUID: ", hex(driver.uuid))
-	else:
-		print("Could not find driver.")
-		return
+		if generator_port:
+			generator = VESC(serial_port = generator_port)
+			print("Generator Firmware: ", generator.get_firmware_version(), " / UUID: ", hex(generator.uuid))
+		else:
+			print("Could not find generator.")
+			return
 
-	if generator_port:
-		generator = VESC(serial_port = generator_port)
-		print("Generator Firmware: ", generator.get_firmware_version(), " / UUID: ", hex(generator.uuid))
-	else:
-		print("Could not find generator.")
-		return
+		#driver_port = '/dev/ttyUSB0'
+		#driver_shunt = Vedirect(driver_port, 60)
+		#driver_shunt.read_data_callback(driver_data_callback)
+			
+		#generator_port = '/dev/ttyUSB1'
+		#generator_shunt = Vedirect(generator_port, 60)
+		#generator_shunt.read_data_callback(generator_data_callback)
 
-	try:	
 		#print ("Driver Measurements:");
 		#pprint(vars(driver.get_measurements()))
 
@@ -64,11 +93,11 @@ def test_generator_motor():
 		#	print("RPM:", motor.get_measurements().rpm)
 		#motor.set_rpm(0)
 
-		#for rpm in range (1000, 13000, 1000):
-		#	characterise_generator_at_rpm(driver, generator, rpm)
+		for rpm in range (1000, 13000, 1000):
+			characterise_generator_at_rpm(driver, generator, rpm)
 	
-		for current in range (0, 60, 5):
-			characterise_generator_at_brake_current(driver, generator, current)
+		#for current in range (0, 60, 5):
+		#	characterise_generator_at_brake_current(driver, generator, current)
 		
 	except KeyboardInterrupt:
 		# Turn Off the VESC
@@ -212,7 +241,12 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 				
 				#if we hit the end of the power curve, exit
 				if avg_gen_wattage < 0:
+					print ("End of power curve.")					
 					break
+				#if we pull the battery too low, exit
+				if avg_gen_voltage < 12:
+					print ("Battery voltage too low")
+					break;
 				
 			samples += 1
 
