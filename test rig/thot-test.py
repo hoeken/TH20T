@@ -5,11 +5,13 @@ from pyvesc import VESC
 from pyvesc.VESC.messages import *
 
 import time
+from datetime import datetime
 import statistics
 from construct import *
 from pprint import pprint
 from vedirect import Vedirect
 import os
+import csv
 
 # a function to show how to use the class with a with-statement
 def test_generator_motor():
@@ -44,7 +46,7 @@ def test_generator_motor():
 
 		#for rpm in range (3000, 13000, 1000):
 		#	characterise_generator_at_rpm(driver, generator, rpm)
-		characterise_generator_at_rpm(driver, generator, 650 * 7)
+		characterise_generator_at_rpm(driver, generator, 5000)
 		
 		#for current in range (0, 60, 5):
 		#	characterise_generator_at_brake_current(driver, generator, current)
@@ -107,109 +109,130 @@ def servo_test(motor):
 		time.sleep(0.1)
 	motor.set_duty_cycle(0)
 
-def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0, end_current = 60, test_duration = 30):
-	print ("Test RPM:", test_rpm)
-	driver.set_rpm(test_rpm)
-	wait_for_rpm(driver, test_rpm)
+def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0, end_current = 60, test_duration = 60, filename = None):
 
-	start_time = time.time()
-	end_time = start_time + test_duration
-	next_display_time = 0
-	samples = 0
-
-	avg_brake_current_array = []
-	avg_gen_rpm_array = []
-	avg_gen_voltage_array = []
-	avg_gen_amperage_array = []
-	avg_gen_wattage_array = []
-	avg_drv_rpm_array = []
-	avg_drv_voltage_array = []
-	avg_drv_amperage_array = []
-	avg_drv_wattage_array = []
+	if filename is None:
+		filename = "generator_rpm_{:.0f}_{:.0f}A_to_{:.0f}A_{:.0f}s.csv".format(test_rpm, start_current, end_current, test_duration)
 	
-	while time.time() <= end_time:
-		#set our brake current to be proportional based on time
-		current_range = end_current - start_current
-		brake_current = start_current + current_range - current_range * ((end_time - time.time()) / test_duration)
-		generator.set_brake_current(brake_current)
+	with open(filename, "w", newline='') as csvfile:
+		csvwriter = csv.writer(csvfile)
+		csvwriter.writerow(['Time','Efficiency', 'Brake Current', 'Gen RPM', 'Gen Voltage', 'Gen Amperage', 'Gen Wattage', 'Driver RPM', 'Driver Voltage', 'Driver Amperage', 'Driver Wattage'])
 
-		try:
-			measurements = generator.get_measurements()
-			gen_rpm = measurements.rpm
-			gen_voltage = measurements.v_in
-			gen_amperage = -measurements.avg_input_current
-			gen_wattage = gen_voltage * gen_amperage
+		print ("Test RPM:", test_rpm)
+		driver.set_rpm(test_rpm)
+		wait_for_rpm(driver, test_rpm)
 
-			measurements = driver.get_measurements()
-			drv_rpm = measurements.rpm
-			drv_voltage = measurements.v_in
-			drv_amperage = measurements.avg_input_current
-			drv_wattage = drv_voltage * drv_amperage
+		start_time = time.time()
+		end_time = start_time + test_duration
+		next_display_time = 0
+		samples = 0
 
-			avg_brake_current_array.append(brake_current)
-			avg_gen_rpm_array.append(gen_rpm)
-			avg_gen_voltage_array.append(gen_voltage)
-			avg_gen_amperage_array.append(gen_amperage)
-			avg_gen_wattage_array.append(gen_wattage)
-			avg_drv_rpm_array.append(drv_rpm)
-			avg_drv_voltage_array.append(drv_voltage)
-			avg_drv_amperage_array.append(drv_amperage)
-			avg_drv_wattage_array.append(drv_wattage)
+		avg_brake_current_array = []
+		avg_gen_rpm_array = []
+		avg_gen_voltage_array = []
+		avg_gen_amperage_array = []
+		avg_gen_wattage_array = []
+		avg_drv_rpm_array = []
+		avg_drv_voltage_array = []
+		avg_drv_amperage_array = []
+		avg_drv_wattage_array = []
+		
+		while time.time() <= end_time:
+			#set our brake current to be proportional based on time
+			current_range = end_current - start_current
+			brake_current = start_current + current_range - current_range * ((end_time - time.time()) / test_duration)
+			generator.set_brake_current(brake_current)
 
-			
-			if (drv_wattage != 0):
-				efficiency = 100 * (gen_wattage / drv_wattage)
-			else:
-				efficiency = 0
+			try:
+				measurements = generator.get_measurements()
+				gen_rpm = measurements.rpm
+				gen_voltage = measurements.v_in
+				gen_amperage = -measurements.avg_input_current
+				gen_wattage = gen_voltage * gen_amperage
+				gen_fault_code = int(measurements.mc_fault_code)
 
-			#do we want to display it?
-			if time.time() > next_display_time:
-				avg_brake_current = statistics.mean(avg_brake_current_array)
-				avg_gen_rpm = statistics.mean(avg_gen_rpm_array)
-				avg_gen_voltage = statistics.mean(avg_gen_voltage_array)
-				avg_gen_amperage = statistics.mean(avg_gen_amperage_array)
-				avg_gen_wattage = statistics.mean(avg_gen_wattage_array)
+				if gen_fault_code != 0:
+					print("Gen fault code:" + str(gen_fault_code))
 
-				avg_drv_rpm = statistics.mean(avg_drv_rpm_array)
-				avg_drv_voltage = statistics.mean(avg_drv_voltage_array)
-				avg_drv_amperage = statistics.mean(avg_drv_amperage_array)
-				avg_drv_wattage = statistics.mean(avg_drv_wattage_array)
+				measurements = driver.get_measurements()
+				drv_rpm = measurements.rpm
+				drv_voltage = measurements.v_in
+				drv_amperage = measurements.avg_input_current
+				drv_wattage = drv_voltage * drv_amperage
+				drv_fault_code = int(measurements.mc_fault_code)
 
-				if (avg_drv_wattage != 0):
-					avg_efficiency = 100 * (avg_gen_wattage / avg_drv_wattage)
+				if drv_fault_code != 0:
+					print("Gen fault code:" + str(drv_fault_code))
+
+				if (drv_wattage != 0):
+					efficiency = 100 * (gen_wattage / drv_wattage)
 				else:
-					avg_efficiency = 0
+					efficiency = 0
 
-				print ("Efficiency: {:.1f}% | Brake Current: {:.2f}A | Generator: {:.0f}RPM, {:.1f}V, {:.2f}A, {:.1f}W | Driver: {:.0f}RPM, {:.1f}V, {:.2f}A, {:.1f}W".format(avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage))
+				#if efficiency >= 0.0 and efficiency <= 100.0:
+				avg_brake_current_array.append(brake_current)
+				avg_gen_rpm_array.append(gen_rpm)
+				avg_gen_voltage_array.append(gen_voltage)
+				avg_gen_amperage_array.append(gen_amperage)
+				avg_gen_wattage_array.append(gen_wattage)
+				avg_drv_rpm_array.append(drv_rpm)
+				avg_drv_voltage_array.append(drv_voltage)
+				avg_drv_amperage_array.append(drv_amperage)
+				avg_drv_wattage_array.append(drv_wattage)
 
-				avg_brake_current_array = []
-				avg_gen_rpm_array = []
-				avg_gen_voltage_array = []
-				avg_gen_amperage_array = []
-				avg_gen_wattage_array = []
-				avg_drv_rpm_array = []
-				avg_drv_voltage_array = []
-				avg_drv_amperage_array = []
-				avg_drv_wattage_array = []
+				#do we want to display it?
+				if time.time() > next_display_time:
+					avg_brake_current = statistics.mean(avg_brake_current_array)
+					avg_gen_rpm = statistics.mean(avg_gen_rpm_array)
+					avg_gen_voltage = statistics.mean(avg_gen_voltage_array)
+					avg_gen_amperage = statistics.mean(avg_gen_amperage_array)
+					avg_gen_wattage = statistics.mean(avg_gen_wattage_array)
 
-				next_display_time = time.time() + 0.5
+					avg_drv_rpm = statistics.mean(avg_drv_rpm_array)
+					avg_drv_voltage = statistics.mean(avg_drv_voltage_array)
+					avg_drv_amperage = statistics.mean(avg_drv_amperage_array)
+					avg_drv_wattage = statistics.mean(avg_drv_wattage_array)
+
+					if (avg_drv_wattage != 0):
+						avg_efficiency = 100 * (avg_gen_wattage / avg_drv_wattage)
+					else:
+						avg_efficiency = 0
+
+
+					date_string = time.time()
+					#date_string = datetime.now().isoformat()
+					csvwriter.writerow([date_string, avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage])
+
+					print ("E: {:5.1f}% | BC: {:5.2f}A | Gen: {:5.0f} RPM, {:4.1f}V, {:5.2f}A, {:5.1f}W | Drv: {:5.0f} RPM, {:4.1f}V, {:5.2f}A, {:5.1f}W".format(avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage))
+
+					avg_brake_current_array = []
+					avg_gen_rpm_array = []
+					avg_gen_voltage_array = []
+					avg_gen_amperage_array = []
+					avg_gen_wattage_array = []
+					avg_drv_rpm_array = []
+					avg_drv_voltage_array = []
+					avg_drv_amperage_array = []
+					avg_drv_wattage_array = []
+
+					next_display_time = time.time() + 0.5
+					
+					#if we hit the end of the power curve, exit
+					if avg_gen_wattage < 0 and time.time() - start_time > 5:
+						print ("End of power curve.")					
+						break
+					#if we pull the battery too low, exit
+					if avg_gen_voltage < 12:
+						print ("Battery voltage too low")
+						break;
+					
+				samples += 1
 				
-				#if we hit the end of the power curve, exit
-				if avg_gen_wattage < 0 and time.time() - start_time > 1.0:
-					print ("End of power curve.")					
-					break
-				#if we pull the battery too low, exit
-				if avg_gen_voltage < 12:
-					print ("Battery voltage too low")
-					break;
-				
-			samples += 1
-			
-			time.sleep(0.01)
+				#time.sleep(0.01)
 
-			#okay, write it to our csv...
-		except AttributeError as e:
-			continue
+				#okay, write it to our csv...
+			except AttributeError as e:
+				continue
 					
 
 	driver.set_rpm(0)

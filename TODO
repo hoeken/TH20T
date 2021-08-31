@@ -1,0 +1,6 @@
+* have scripts output all data in csv format
+* update pyvesc to pull in config data to get # of poles for rpm conversion
+* figure out how to call victron scripts from main test script
+* write a script to parse the data and show some nice graphs
+
+* write an MPPT algo using set current to find the optimum charge current
