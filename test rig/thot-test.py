@@ -9,31 +9,15 @@ import statistics
 from construct import *
 from pprint import pprint
 from vedirect import Vedirect
+import os
 
-def driver_data_callback(packet):
-	packet_log(packet, 'driver')	
-
-def generator_data_callback(packet):
-	packet_log(packet, 'generator')
-
-def packet_log(packet, mytype):
-	try:
-		#pprint(packet)
-		voltage = int(packet.get('V', 0)) / 1000.0
-		amperage = int(packet.get('I', 0)) / 1000.0
-		wattage = int(packet.get('P', 0)) / 1000.0
-
-		print("{} {} {:.3f}V {:.3f}A {:.3f}W".format(time.time(), mytype, voltage, amperage, wattage))
-	except AttributeError as e:
-		print (e)
-
-		
 # a function to show how to use the class with a with-statement
 def test_generator_motor():
 	try:
 		driver_uuid = 0x400030001850524154373020
 		generator_uuid = 0x1c002d000550523947383920
-
+		#generator_uuid = 0x580049001550315739383420
+		
 		driver_port = VESC.get_vesc_serial_port_by_uuid(driver_uuid)
 		generator_port = VESC.get_vesc_serial_port_by_uuid(generator_uuid)
 		
@@ -51,59 +35,30 @@ def test_generator_motor():
 			print("Could not find generator.")
 			return
 
-		#driver_port = '/dev/ttyUSB0'
-		#driver_shunt = Vedirect(driver_port, 60)
-		#driver_shunt.read_data_callback(driver_data_callback)
-			
-		#generator_port = '/dev/ttyUSB1'
-		#generator_shunt = Vedirect(generator_port, 60)
-		#generator_shunt.read_data_callback(generator_data_callback)
+		dir_path = os.path.dirname(os.path.realpath(__file__))
 
-		#print ("Driver Measurements:");
-		#pprint(vars(driver.get_measurements()))
+		driver_port = '/dev/ttyUSB0'
+		#driver_pid = os.spawnlp(os.P_NOWAIT, dir_path + "/smartshunt.py", "port", driver_port)
 
-		#test what frequency of updates we can get....
-		#driver.set_duty_cycle(0.2)
-		#count = 0
-		#start = time.time()
-		#for i in range(1, 10000):
-		#	data = driver.get_measurements()
-		#	count += 1
-		#end = time.time()
-		#total = end - start
-		#print(10000 / total, " updates / sec")
+		generator_port = '/dev/ttyUSB1'
+
+		#for rpm in range (3000, 13000, 1000):
+		#	characterise_generator_at_rpm(driver, generator, rpm)
+		characterise_generator_at_rpm(driver, generator, 650 * 7)
 		
-		#print ("Generator Measurements:");
-		#pprint(vars(generator.get_measurements()))
-
-		#duty_cycle_ramp(driver)
-		#current_ramp(driver)
-		#rpm_ramp(driver)
-		#servo_test(driver)
-
-		#pprint(driver.get_rpm())
-		#pprint(driver.get_duty_cycle())
-		#pprint(driver.get_v_in())
-		#pprint(driver.get_motor_current())
-		#pprint(driver.get_incoming_current())
-
-		# run motor and print out rpm for ~2 seconds
-		#for i in range(30):
-		#	time.sleep(0.1)
-		#	print("RPM:", motor.get_measurements().rpm)
-		#motor.set_rpm(0)
-
-		for rpm in range (1000, 13000, 1000):
-			characterise_generator_at_rpm(driver, generator, rpm)
-	
 		#for current in range (0, 60, 5):
 		#	characterise_generator_at_brake_current(driver, generator, current)
+		
+		#characterise_generator_old(driver, generator)
 		
 	except KeyboardInterrupt:
 		# Turn Off the VESC
 		driver.set_current(0)
 		generator.set_current(0)
 
+	#os.kill(driver_pid)
+	#os.kill(driver_pid)
+	
 	driver.stop_heartbeat()
 	generator.stop_heartbeat()
 
@@ -152,7 +107,7 @@ def servo_test(motor):
 		time.sleep(0.1)
 	motor.set_duty_cycle(0)
 
-def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0, end_current = 60, test_duration = 60):
+def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0, end_current = 60, test_duration = 30):
 	print ("Test RPM:", test_rpm)
 	driver.set_rpm(test_rpm)
 	wait_for_rpm(driver, test_rpm)
@@ -237,10 +192,10 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 				avg_drv_amperage_array = []
 				avg_drv_wattage_array = []
 
-				next_display_time = time.time() + 0.25
+				next_display_time = time.time() + 0.5
 				
 				#if we hit the end of the power curve, exit
-				if avg_gen_wattage < 0:
+				if avg_gen_wattage < 0 and time.time() - start_time > 1.0:
 					print ("End of power curve.")					
 					break
 				#if we pull the battery too low, exit
@@ -249,6 +204,8 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 					break;
 				
 			samples += 1
+			
+			time.sleep(0.01)
 
 			#okay, write it to our csv...
 		except AttributeError as e:
@@ -375,7 +332,7 @@ def characterise_generator_old(driver, generator):
 	#test_rpms = [5000, 10000]
 	#test_brake_current = [1000, 2000, 3000, 4000, 5000]
 
-	test_rpms = [10000]
+	test_rpms = [4000]
 	test_brake_current = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 	#test_brake_current = range(1, 30, 5)
 
@@ -402,7 +359,7 @@ def characterise_generator_old(driver, generator):
 			avg_drv_amperage_array = []
 			avg_drv_wattage_array = []
 
-			end_time = time.time() + 5
+			end_time = time.time() + 15
 			while(time.time() < end_time):
 
 				measurements = generator.get_measurements()
@@ -492,3 +449,37 @@ def test_construct_parsing():
 
 if __name__ == '__main__':
 	test_generator_motor()
+	
+#print ("Driver Measurements:");
+#pprint(vars(driver.get_measurements()))
+
+#test what frequency of updates we can get....
+#driver.set_duty_cycle(0.2)
+#count = 0
+#start = time.time()
+#for i in range(1, 10000):
+#	data = driver.get_measurements()
+#	count += 1
+#end = time.time()
+#total = end - start
+#print(10000 / total, " updates / sec")
+
+#print ("Generator Measurements:");
+#pprint(vars(generator.get_measurements()))
+
+#duty_cycle_ramp(driver)
+#current_ramp(driver)
+#rpm_ramp(driver)
+#servo_test(driver)
+
+#pprint(driver.get_rpm())
+#pprint(driver.get_duty_cycle())
+#pprint(driver.get_v_in())
+#pprint(driver.get_motor_current())
+#pprint(driver.get_incoming_current())
+
+# run motor and print out rpm for ~2 seconds
+#for i in range(30):
+#	time.sleep(0.1)
+#	print("RPM:", motor.get_measurements().rpm)
+#motor.set_rpm(0)
