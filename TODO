@@ -5,4 +5,13 @@
 	* rpm vs peak efficiency
 	* speed (kts) vs rpm (generator)
 	* drag (load cell) vs output
-* write an MPPT algo using set current to find the optimum charge current
+* write an MPPT algo to optimize charge
+	* set driver to a fixed current (torque?)
+	* try to find optimum power generated (scan set_brake_current?)
+
+Long Term:
+
+* What happens when battery gets full?
+* Look up Victron 3 stage charging, can we implement that?
+* Allow to charge / Allow to discharge functionality
+* Victron CAN bus or connect via Cerbo over network?
