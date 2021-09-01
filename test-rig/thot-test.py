@@ -31,6 +31,7 @@ def test_generator_motor():
 			return
 
 		#pprint(vars(driver.conf))
+		#pprint(vars(driver.get_measurements()))
 
 		if generator_port:
 			generator = VESC(serial_port = generator_port)
@@ -40,6 +41,7 @@ def test_generator_motor():
 			return
 
 		#pprint(vars(generator.conf))
+		#pprint(vars(generator.get_measurements()))
 
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -120,7 +122,7 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 	
 	with open(filename, "w", newline='') as csvfile:
 		csvwriter = csv.writer(csvfile)
-		csvwriter.writerow(['Time','Efficiency', 'Brake Current', 'Gen RPM', 'Gen Voltage', 'Gen Amperage', 'Gen Wattage', 'Driver RPM', 'Driver Voltage', 'Driver Amperage', 'Driver Wattage'])
+		csvwriter.writerow(['Time','Efficiency', 'Brake Current', 'Gen RPM', 'Gen Voltage', 'Gen Amperage', 'Gen Wattage', 'Gen FET Temp', 'Gen Motor Temp', 'Driver RPM', 'Driver Voltage', 'Driver Amperage', 'Driver Wattage', 'Driver FET Temp', 'Driver Motor Temp'])
 
 		print ("Test RPM:", test_rpm)
 		driver.set_rpm(test_rpm)
@@ -136,10 +138,14 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 		avg_gen_voltage_array = []
 		avg_gen_amperage_array = []
 		avg_gen_wattage_array = []
+		avg_gen_temp_fet_array = []
+		avg_gen_temp_motor_array = []
 		avg_drv_rpm_array = []
 		avg_drv_voltage_array = []
 		avg_drv_amperage_array = []
 		avg_drv_wattage_array = []
+		avg_drv_temp_fet_array = []
+		avg_drv_temp_motor_array = []
 		
 		while time.time() <= end_time:
 			#set our brake current to be proportional based on time
@@ -153,6 +159,8 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 				gen_voltage = measurements.v_in
 				gen_amperage = -measurements.avg_input_current
 				gen_wattage = gen_voltage * gen_amperage
+				gen_temp_fet = measurements.temp_fet
+				gen_temp_motor = measurements.temp_motor
 				gen_fault_code = int(measurements.mc_fault_code)
 
 				if gen_fault_code != 0:
@@ -164,6 +172,8 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 				drv_amperage = measurements.avg_input_current
 				drv_wattage = drv_voltage * drv_amperage
 				drv_fault_code = int(measurements.mc_fault_code)
+				drv_temp_fet = measurements.temp_fet
+				drv_temp_motor = measurements.temp_motor
 
 				if drv_fault_code != 0:
 					print("Gen fault code:" + str(drv_fault_code))
@@ -179,10 +189,14 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 				avg_gen_voltage_array.append(gen_voltage)
 				avg_gen_amperage_array.append(gen_amperage)
 				avg_gen_wattage_array.append(gen_wattage)
+				avg_gen_temp_fet_array.append(gen_temp_fet)
+				avg_gen_temp_motor_array.append(gen_temp_motor)
 				avg_drv_rpm_array.append(drv_rpm)
 				avg_drv_voltage_array.append(drv_voltage)
 				avg_drv_amperage_array.append(drv_amperage)
 				avg_drv_wattage_array.append(drv_wattage)
+				avg_drv_temp_fet_array.append(drv_temp_fet)
+				avg_drv_temp_motor_array.append(drv_temp_motor)
 
 				#do we want to display it?
 				if time.time() > next_display_time:
@@ -191,11 +205,15 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 					avg_gen_voltage = statistics.mean(avg_gen_voltage_array)
 					avg_gen_amperage = statistics.mean(avg_gen_amperage_array)
 					avg_gen_wattage = statistics.mean(avg_gen_wattage_array)
+					avg_gen_temp_fet = statistics.mean(avg_gen_temp_fet_array)
+					avg_gen_temp_motor = statistics.mean(avg_gen_temp_motor_array)
 
 					avg_drv_rpm = statistics.mean(avg_drv_rpm_array)
 					avg_drv_voltage = statistics.mean(avg_drv_voltage_array)
 					avg_drv_amperage = statistics.mean(avg_drv_amperage_array)
 					avg_drv_wattage = statistics.mean(avg_drv_wattage_array)
+					avg_drv_temp_fet = statistics.mean(avg_drv_temp_fet_array)
+					avg_drv_temp_motor = statistics.mean(avg_drv_temp_motor_array)
 
 					if (avg_drv_wattage != 0):
 						avg_efficiency = 100 * (avg_gen_wattage / avg_drv_wattage)
@@ -205,19 +223,23 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 
 					date_string = time.time()
 					#date_string = datetime.now().isoformat()
-					csvwriter.writerow([date_string, avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage])
+					csvwriter.writerow([date_string, avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_gen_temp_fet, avg_gen_temp_motor, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage, avg_drv_temp_fet, avg_drv_temp_motor])
 
-					print ("E: {:5.1f}% | BC: {:5.2f}A | Gen: {:4.0f} RPM, {:4.1f}V, {:5.2f}A, {:5.1f}W | Drv: {:4.0f} RPM, {:4.1f}V, {:5.2f}A, {:5.1f}W".format(avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage))
+					print ("E: {:4.1f}% | BC: {:5.2f}A | Gen: {:4.0f} RPM, {:4.1f}V, {:5.2f}A, {:6.1f}W {:4.1f}C | Drv: {:4.0f} RPM, {:4.1f}V, {:5.2f}A, {:6.1f}W {:4.1f}C".format(avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_gen_temp_fet, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage, avg_drv_temp_fet))
 
 					avg_brake_current_array = []
 					avg_gen_rpm_array = []
 					avg_gen_voltage_array = []
 					avg_gen_amperage_array = []
 					avg_gen_wattage_array = []
+					avg_gen_temp_fet_array = []
+					avg_gen_temp_motor_array = []
 					avg_drv_rpm_array = []
 					avg_drv_voltage_array = []
 					avg_drv_amperage_array = []
 					avg_drv_wattage_array = []
+					avg_drv_temp_fet_array = []
+					avg_drv_temp_motor_array = []
 
 					next_display_time = time.time() + 0.5
 					
