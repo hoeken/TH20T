@@ -30,12 +30,16 @@ def test_generator_motor():
 			print("Could not find driver.")
 			return
 
+		#pprint(vars(driver.conf))
+
 		if generator_port:
 			generator = VESC(serial_port = generator_port)
 			print("Generator Firmware: ", generator.get_firmware_version(), " / UUID: ", hex(generator.uuid))
 		else:
 			print("Could not find generator.")
 			return
+
+		#pprint(vars(generator.conf))
 
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -46,7 +50,7 @@ def test_generator_motor():
 
 		#for rpm in range (3000, 13000, 1000):
 		#	characterise_generator_at_rpm(driver, generator, rpm)
-		characterise_generator_at_rpm(driver, generator, 5000)
+		characterise_generator_at_rpm(driver, generator, 700)
 		
 		#for current in range (0, 60, 5):
 		#	characterise_generator_at_brake_current(driver, generator, current)
@@ -89,12 +93,12 @@ def current_ramp(motor):
 
 def rpm_ramp(motor):
 	print ("RPM Ramp Up")
-	for i in range (1000, 10000, 250):
+	for i in range (100, 1800, 100):
 		motor.set_rpm(i)
 		time.sleep(1)
 	print ("RPM Ramp Down")
-	for i in range (1000, 10000, 250):
-		motor.set_rpm(10000-i)
+	for i in range (100, 1800, 100):
+		motor.set_rpm(1800-i)
 		time.sleep(1)
 	motor.set_rpm(0)
 
@@ -145,7 +149,7 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 
 			try:
 				measurements = generator.get_measurements()
-				gen_rpm = measurements.rpm
+				gen_rpm = measurements.rpm / (generator.conf.motor_poles / 2)
 				gen_voltage = measurements.v_in
 				gen_amperage = -measurements.avg_input_current
 				gen_wattage = gen_voltage * gen_amperage
@@ -155,7 +159,7 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 					print("Gen fault code:" + str(gen_fault_code))
 
 				measurements = driver.get_measurements()
-				drv_rpm = measurements.rpm
+				drv_rpm = measurements.rpm / (driver.conf.motor_poles / 2)
 				drv_voltage = measurements.v_in
 				drv_amperage = measurements.avg_input_current
 				drv_wattage = drv_voltage * drv_amperage
@@ -203,7 +207,7 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 					#date_string = datetime.now().isoformat()
 					csvwriter.writerow([date_string, avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage])
 
-					print ("E: {:5.1f}% | BC: {:5.2f}A | Gen: {:5.0f} RPM, {:4.1f}V, {:5.2f}A, {:5.1f}W | Drv: {:5.0f} RPM, {:4.1f}V, {:5.2f}A, {:5.1f}W".format(avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage))
+					print ("E: {:5.1f}% | BC: {:5.2f}A | Gen: {:4.0f} RPM, {:4.1f}V, {:5.2f}A, {:5.1f}W | Drv: {:4.0f} RPM, {:4.1f}V, {:5.2f}A, {:5.1f}W".format(avg_efficiency, avg_brake_current, avg_gen_rpm, avg_gen_voltage, avg_gen_amperage, avg_gen_wattage, avg_drv_rpm, avg_drv_voltage, avg_drv_amperage, avg_drv_wattage))
 
 					avg_brake_current_array = []
 					avg_gen_rpm_array = []
@@ -355,7 +359,7 @@ def characterise_generator_old(driver, generator):
 	#test_rpms = [5000, 10000]
 	#test_brake_current = [1000, 2000, 3000, 4000, 5000]
 
-	test_rpms = [4000]
+	test_rpms = [500]
 	test_brake_current = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]
 	#test_brake_current = range(1, 30, 5)
 
