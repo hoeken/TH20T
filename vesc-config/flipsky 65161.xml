@@ -4,8 +4,8 @@
     <comm_mode>0</comm_mode>
     <motor_type>2</motor_type>
     <sensor_mode>0</sensor_mode>
-    <l_current_max>120</l_current_max>
-    <l_current_min>-120</l_current_min>
+    <l_current_max>60</l_current_max>
+    <l_current_min>-60</l_current_min>
     <l_in_current_max>99</l_in_current_max>
     <l_in_current_min>-60</l_in_current_min>
     <l_abs_current_max>150</l_abs_current_max>
@@ -16,8 +16,8 @@
     <l_max_erpm_fbrake_cc>1500</l_max_erpm_fbrake_cc>
     <l_min_vin>8</l_min_vin>
     <l_max_vin>57</l_max_vin>
-    <l_battery_cut_start>11.6</l_battery_cut_start>
-    <l_battery_cut_end>10.4</l_battery_cut_end>
+    <l_battery_cut_start>10</l_battery_cut_start>
+    <l_battery_cut_end>8</l_battery_cut_end>
     <l_slow_abs_current>1</l_slow_abs_current>
     <l_temp_fet_start>85</l_temp_fet_start>
     <l_temp_fet_end>100</l_temp_fet_end>
@@ -47,8 +47,8 @@
     <hall_table__6>4</hall_table__6>
     <hall_table__7>-1</hall_table__7>
     <hall_sl_erpm>2000</hall_sl_erpm>
-    <foc_current_kp>0.0148</foc_current_kp>
-    <foc_current_ki>25.28</foc_current_ki>
+    <foc_current_kp>0.0384</foc_current_kp>
+    <foc_current_ki>40.68</foc_current_ki>
     <foc_f_sw>30000</foc_f_sw>
     <foc_dt_us>0.12</foc_dt_us>
     <foc_encoder_inverted>0</foc_encoder_inverted>
@@ -59,18 +59,18 @@
     <foc_encoder_sin_offset>1.65</foc_encoder_sin_offset>
     <foc_encoder_cos_offset>1.65</foc_encoder_cos_offset>
     <foc_encoder_sincos_filter_constant>0.5</foc_encoder_sincos_filter_constant>
-    <foc_sensor_mode>2</foc_sensor_mode>
+    <foc_sensor_mode>0</foc_sensor_mode>
     <foc_pll_kp>2000</foc_pll_kp>
     <foc_pll_ki>30000</foc_pll_ki>
-    <foc_motor_l>1.481e-05</foc_motor_l>
+    <foc_motor_l>3.842e-05</foc_motor_l>
     <foc_motor_ld_lq_diff>0</foc_motor_ld_lq_diff>
-    <foc_motor_r>0.0253</foc_motor_r>
-    <foc_motor_flux_linkage>0.004612</foc_motor_flux_linkage>
-    <foc_observer_gain>4.701e+07</foc_observer_gain>
+    <foc_motor_r>0.0407</foc_motor_r>
+    <foc_motor_flux_linkage>0.017333</foc_motor_flux_linkage>
+    <foc_observer_gain>3.33e+06</foc_observer_gain>
     <foc_observer_gain_slow>0.05</foc_observer_gain_slow>
     <foc_duty_dowmramp_kp>10</foc_duty_dowmramp_kp>
     <foc_duty_dowmramp_ki>200</foc_duty_dowmramp_ki>
-    <foc_openloop_rpm>700</foc_openloop_rpm>
+    <foc_openloop_rpm>1500</foc_openloop_rpm>
     <foc_openloop_rpm_low>0</foc_openloop_rpm_low>
     <foc_d_gain_scale_start>0.9</foc_d_gain_scale_start>
     <foc_d_gain_scale_max_mod>0.2</foc_d_gain_scale_max_mod>
@@ -78,17 +78,17 @@
     <foc_sl_openloop_time_lock>0</foc_sl_openloop_time_lock>
     <foc_sl_openloop_time_ramp>0.1</foc_sl_openloop_time_ramp>
     <foc_sl_openloop_time>0.05</foc_sl_openloop_time>
-    <foc_hall_table__0>17</foc_hall_table__0>
-    <foc_hall_table__1>52</foc_hall_table__1>
-    <foc_hall_table__2>178</foc_hall_table__2>
+    <foc_hall_table__0>19</foc_hall_table__0>
+    <foc_hall_table__1>50</foc_hall_table__1>
+    <foc_hall_table__2>180</foc_hall_table__2>
     <foc_hall_table__3>255</foc_hall_table__3>
     <foc_hall_table__4>255</foc_hall_table__4>
-    <foc_hall_table__5>89</foc_hall_table__5>
-    <foc_hall_table__6>145</foc_hall_table__6>
-    <foc_hall_table__7>119</foc_hall_table__7>
+    <foc_hall_table__5>85</foc_hall_table__5>
+    <foc_hall_table__6>148</foc_hall_table__6>
+    <foc_hall_table__7>118</foc_hall_table__7>
     <foc_hall_interp_erpm>500</foc_hall_interp_erpm>
-    <foc_sl_erpm>4000</foc_sl_erpm>
-    <foc_sample_v0_v7>0</foc_sample_v0_v7>
+    <foc_sl_erpm>2500</foc_sl_erpm>
+    <foc_sample_v0_v7>1</foc_sample_v0_v7>
     <foc_sample_high_current>0</foc_sample_high_current>
     <foc_sat_comp>0</foc_sat_comp>
     <foc_temp_comp>0</foc_temp_comp>
@@ -114,7 +114,7 @@
     <s_pid_kd_filter>0.2</s_pid_kd_filter>
     <s_pid_min_erpm>1</s_pid_min_erpm>
     <s_pid_allow_braking>1</s_pid_allow_braking>
-    <s_pid_ramp_erpms_s>15000</s_pid_ramp_erpms_s>
+    <s_pid_ramp_erpms_s>-1</s_pid_ramp_erpms_s>
     <p_pid_kp>0.03</p_pid_kp>
     <p_pid_ki>0</p_pid_ki>
     <p_pid_kd>0.0004</p_pid_kd>
@@ -140,12 +140,12 @@
     <m_motor_temp_sens_type>0</m_motor_temp_sens_type>
     <m_ptc_motor_coeff>0.61</m_ptc_motor_coeff>
     <m_hall_extra_samples>1</m_hall_extra_samples>
-    <si_motor_poles>14</si_motor_poles>
+    <si_motor_poles>6</si_motor_poles>
     <si_gear_ratio>1</si_gear_ratio>
     <si_wheel_diameter>0.083</si_wheel_diameter>
     <si_battery_type>1</si_battery_type>
-    <si_battery_cells>4</si_battery_cells>
-    <si_battery_ah>24</si_battery_ah>
+    <si_battery_cells>8</si_battery_cells>
+    <si_battery_ah>36</si_battery_ah>
     <motor_brand>Unnamed</motor_brand>
     <motor_model>Not Specified</motor_model>
     <motor_weight>0</motor_weight>
