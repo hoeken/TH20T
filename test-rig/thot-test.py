@@ -63,10 +63,10 @@ def test_generator_motor():
 			#	time.sleep(0.5)
 			#characterise_generator_at_rpm(driver, generator, 700)
 
-			for current in range (10, 60+1, 10):
-				characterise_generator_at_brake_current(driver, generator, current, end_rpm = max_rpm)
-				time.sleep(0.5)
-			#characterise_generator_at_brake_current(driver, generator, 60, start_rpm = 500, end_rpm = max_rpm)
+			#for current in range (10, 60+1, 10):
+			#	characterise_generator_at_brake_current(driver, generator, current, end_rpm = max_rpm)
+			#	time.sleep(0.5)
+			characterise_generator_at_brake_current(driver, generator, 60, start_rpm = 500, end_rpm = max_rpm)
 
 		except Exception as e:
 			print ("Exception: " + str(e))
