@@ -199,7 +199,9 @@ def test_generator_motor():
 			#	time.sleep(0.5)
 			#characterise_generator_at_brake_current(driver, generator, 10, start_rpm = 300, end_rpm = max_rpm)
 
-			test_mppt(driver, generator, 5)
+			#test_mppt(driver, generator, 5)
+			
+			monitor_motor(generator, 60)
 
 		except Exception as e:
 			print ("Exception: " + str(e))
@@ -218,6 +220,43 @@ def test_generator_motor():
 	driver.stop_heartbeat()
 	generator.stop_heartbeat()
 
+def monitor_motor(motor, test_duration = None, filename = None):
+
+	if filename is None:
+		filename = "output/monitor.csv"
+		raw_filename = "output/raw_monitor.csv"
+	
+	thotlog = ThotLogger(filename, raw_filename)
+	
+	start_time = time.time()
+	if test_duration is not None:
+		end_time = start_time + test_duration
+	next_display_time = start_time + 1
+	samples = 0
+
+	while test_duration is None or time.time() <= end_time:
+		try:
+			thotlog.new_log()
+
+			thotlog.log_motor(motor, 'gen')
+			
+			#do we want to display it?
+			if time.time() > next_display_time:
+				avg = thotlog.get_averages()
+				thotlog.print_line()
+				thotlog.write_avg_csv()
+				thotlog.clear_averages()
+
+				next_display_time = time.time() + 1
+					
+				samples += 1
+		except AttributeError as e:
+			print (e)
+			traceback.print_exc()
+			continue
+
+	print ("Finished test with {} samples.".format(samples))
+	
 def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0, end_current = 60, test_duration = 30, filename = None):
 
 	if filename is None:

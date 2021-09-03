@@ -1,18 +1,16 @@
 * arduino - get a script running to read the force sensor
 
 * thot-test.sh
-	* write an algo to optimize charge
+	* write an algo to optimize power
 		* is optimum at a certain speed, or at a certain brake, or moving target?
-	* add a monitor mode for when we test while motoring
 	* figure out how to call victron scripts from main test script
-	* add arduino force into logging
+	* add arduino force stuff into logging
 
 * update graph script to make these graphs:
-	* rpm vs max wattage
-	* rpm vs peak efficiency
+	* rpm, wattage, brake current
+	* rpm wattage, peak efficiency
 	* speed (kts) vs rpm (generator)
-	* drag (load cell) vs output
-
+	* drag (load cell) vs wattage
 
 Long Term:
 
