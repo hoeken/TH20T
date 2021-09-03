@@ -199,7 +199,7 @@ def test_generator_motor():
 			#	time.sleep(0.5)
 			#characterise_generator_at_brake_current(driver, generator, 10, start_rpm = 300, end_rpm = max_rpm)
 
-			characterise_generator_at_drive_current(driver, generator, 10, 0, 20)
+			test_mppt(driver, generator, 5)
 
 		except Exception as e:
 			print ("Exception: " + str(e))
@@ -217,9 +217,6 @@ def test_generator_motor():
 	
 	driver.stop_heartbeat()
 	generator.stop_heartbeat()
-
-
-
 
 def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0, end_current = 60, test_duration = 30, filename = None):
 
@@ -367,23 +364,15 @@ def characterise_generator_at_drive_current(driver, generator, drive_current, st
 	
 	#init our test...
 	driver.set_rpm(1000)
-	print ("Here1")
 	wait_for_rpm(driver, 1000)
-	print ("Here2")
 	driver.set_current(drive_current)
-	print ("Here3")
 	generator.set_brake_current(start_brake_current)
-	print ("Here4")
-
-	print ("Here5")
 	
 	start_time = time.time()
 	end_time = start_time + test_duration
 	next_display_time = start_time + 0.5
 	samples = 0
 
-	print ("Here2")
-	
 	while time.time() <= end_time:
 		#set our brake current to be proportional based on time
 		brake_current_range = end_brake_current - start_brake_current
@@ -425,6 +414,128 @@ def characterise_generator_at_drive_current(driver, generator, drive_current, st
 			#okay, write it to our csv...
 		except AttributeError as e:
 			print (e)
+			continue
+					
+	#turn it off
+	driver.set_rpm(0)
+	generator.set_brake_current(0)
+
+	print ("Finished test with {} samples.".format(samples))
+
+def test_mppt(driver, generator, drive_current, test_duration = None, filename = None):
+
+	if filename is None:
+		filename = "output/mppt_{:.0f}A.csv".format(drive_current)
+		raw_filename = "output/raw_mppt_{:.0f}A.csv".format(drive_current)
+	
+	thotlog = ThotLogger(filename, raw_filename)
+	
+	print ("MPPT Test Current:", drive_current)
+	
+	#init our test...
+	driver.set_rpm(1000)
+	wait_for_rpm(driver, 1000)
+	driver.set_current(drive_current)
+	generator.set_brake_current(0)
+	
+	start_time = time.time()
+	if test_duration is not None:
+		end_time = start_time + test_duration
+	next_display_time = start_time + 0.50
+	samples = 0
+
+	brake_current = 4.75
+	last_brake_current = brake_current
+	generator.set_brake_current(brake_current)
+
+	last_rpm = 0
+	last_wattage = 0
+	last_current_change = time.time()
+	first_time = True
+	
+	orig_send_interval = 5
+	send_interval = orig_send_interval
+
+	while test_duration is None or time.time() <= end_time:
+		try:
+			thotlog.new_log()
+
+			thotlog.log_motor(generator, 'gen')
+			thotlog.log_motor(driver, 'drv')
+			thotlog.log_efficiency()
+			thotlog.log('brake_current', brake_current)
+			
+			#do we want to display it?
+			if time.time() > next_display_time:
+				avg = thotlog.get_averages()
+				thotlog.print_line()
+				thotlog.write_avg_csv()
+
+				brake_current = last_brake_current
+
+				percent = 0.005
+				big_wattage = last_wattage * (1.0 + percent)
+				big_rpm = last_rpm * (1.0 + percent)
+				lil_wattage = last_wattage * (1.0 - percent)
+				lil_rpm = last_rpm * (1.0 - percent)
+
+				try:
+					#print("Watts: {:6.2f} < {:6.2f} < {:6.2f}  RPM: {:4.0f} < {:4.0f} < {:4.0f}".format(lil_wattage, avg['gen_wattage'], big_wattage, lil_rpm, avg['gen_rpm'], big_rpm))
+
+					#wattage up and rpm up - increase
+					#if avg['gen_wattage'] >= big_wattage and avg['gen_rpm'] >= big_rpm:
+					#	brake_current += 0.1
+					#	last_current_change = time.time()
+					#	last_rpm = avg['gen_rpm']
+					#	last_wattage = avg['gen_wattage']
+						#print ("full send")
+
+					#wattage down or rpm down - decrease
+					if avg['gen_wattage'] < lil_wattage or avg['gen_rpm'] < lil_rpm:
+						brake_current -= 0.02
+						last_current_change = time.time()
+						last_rpm = avg['gen_rpm']
+						last_wattage = avg['gen_wattage']
+						#print ("chill bro")
+						send_interval = orig_send_interval
+
+					#has it been too long since we tried to increase				
+					if time.time() - last_current_change > send_interval:
+						brake_current += 0.01
+						last_current_change = time.time()
+						last_rpm = avg['gen_rpm']
+						last_wattage = avg['gen_wattage']
+						#print ("lets get it")
+						send_interval = send_interval - 1
+						send_interval = max(1, send_interval)
+						
+						
+					generator.set_brake_current(brake_current)
+					last_brake_current = brake_current
+
+					thotlog.clear_averages()
+
+					next_display_time = time.time() + 1
+					
+					#if we hit the end of the power curve, exit
+					if avg['gen_wattage'] < 0 and time.time() - start_time > test_duration/2:
+						print ("End of power curve.")					
+						break
+
+					#if we pull the battery too low, exit
+					if avg['drv_voltage'] < 24:
+						print ("Battery voltage too low")
+						break;
+
+
+					samples += 1
+
+				except TypeError as e:
+					print ("yarr.")
+			#okay, write it to our csv...
+		except AttributeError as e:
+			print (e)
+			traceback.print_exc()
 			continue
 					
 	#turn it off

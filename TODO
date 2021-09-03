@@ -1,13 +1,11 @@
 * arduino - get a script running to read the force sensor
 
 * thot-test.sh
+	* write an algo to optimize charge
+		* is optimum at a certain speed, or at a certain brake, or moving target?
 	* add a monitor mode for when we test while motoring
 	* figure out how to call victron scripts from main test script
 	* add arduino force into logging
-	* write an algo to optimize charge
-		* set driver to a fixed current (torque?)
-		* try to find optimum power generated (scan set_brake_current?)
-		* is optimum at a certain speed, or at a certain brake, or moving target?
 
 * update graph script to make these graphs:
 	* rpm vs max wattage
