@@ -1,7 +1,6 @@
 * arduino - get a script running to read the force sensor
 
 * thot-test.sh
-	* refactor logging code to make things easier
 	* add a monitor mode for when we test while motoring
 	* figure out how to call victron scripts from main test script
 	* add arduino force into logging
