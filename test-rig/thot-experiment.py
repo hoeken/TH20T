@@ -199,9 +199,9 @@ def test_generator_motor():
 			#	time.sleep(0.5)
 			#characterise_generator_at_brake_current(driver, generator, 10, start_rpm = 300, end_rpm = max_rpm)
 
-			#test_mppt(driver, generator, 5)
+			test_mppt(driver, generator, 5)
 			
-			monitor_motor(generator, 60)
+			#monitor_motor(generator, 60)
 
 		except Exception as e:
 			print ("Exception: " + str(e))
