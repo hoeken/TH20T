@@ -126,8 +126,8 @@ class ThotLogger():
 			vals = self.get_averages()
 			
 		output =  "{:13.2f} | E: {:4.1f}% | RPM: {:4.0f} | BC: {:5.2f}A | "
-		output += "Gen: {:4.0f} RPM, {:4.1f}V, {:5.2f}A, {:6.1f}W MOS: {:4.1f}C MOT: {:4.1f}C | "
-		output += "Drv: {:4.0f} RPM, {:4.1f}V, {:5.2f}A, {:6.1f}W MOS: {:4.1f}C MOT: {:4.1f}C"
+		output += "Gen: {:4.0f} RPM, {:5.2f}V, {:5.2f}A, {:6.1f}W MOS: {:4.1f}C MOT: {:4.1f}C | "
+		output += "Drv: {:4.0f} RPM, {:5.2f}V, {:5.2f}A, {:6.1f}W MOS: {:4.1f}C MOT: {:4.1f}C"
 		
 		print (output.format(
 			time.time(), vals['efficiency'], vals['target_rpm'], vals['brake_current'], 
@@ -149,9 +149,11 @@ class ThotLogger():
 # a function to show how to use the class with a with-statement
 def test_generator_motor():
 	try:
-		driver_uuid = 0x400030001850524154373020
-		generator_uuid = 0x1c002d000550523947383920
-		#generator_uuid = 0x580049001550315739383420
+		driver_uuid    = 0x5300450011504d4143323520 # Trampa V60 VESC
+		generator_uuid = 0x1b00420012504D4143323520 # Trampa V60 VESC
+		#driver_uuid    = 0x400030001850524154373020 # Flipsky FSESC
+		#generator_uuid = 0x1c002d000550523947383920 # Flipsky FSESC
+		#generator_uuid = 0x580049001550315739383420 # Flipsky 75/300
 		
 		driver_port = VESC.get_vesc_serial_port_by_uuid(driver_uuid)
 		generator_port = VESC.get_vesc_serial_port_by_uuid(generator_uuid)
@@ -187,19 +189,19 @@ def test_generator_motor():
 		Path("output").mkdir(parents=True, exist_ok=True)
 
 		try:
-			max_rpm = 2500
+			max_rpm = 3500
 			
 			#for rpm in range (1000, max_rpm+1, 100):
 			#	characterise_generator_at_rpm(driver, generator, rpm)
 			#	time.sleep(0.5)
 			#characterise_generator_at_rpm(driver, generator, 1000)
 
-			#for current in range (10, 60+1, 10):
-			#	characterise_generator_at_brake_current(driver, generator, current, end_rpm = max_rpm)
-			#	time.sleep(0.5)
-			#characterise_generator_at_brake_current(driver, generator, 10, start_rpm = 300, end_rpm = max_rpm)
+			characterise_generator_at_brake_current(driver, generator, 5, end_rpm = max_rpm)
+			for current in range (10, 60+1, 10):
+				characterise_generator_at_brake_current(driver, generator, current, end_rpm = max_rpm)
+				time.sleep(0.5)
 
-			test_mppt(driver, generator, 5)
+			test_mppt(driver, generator, 8)
 			
 			#monitor_motor(generator, 60)
 
@@ -352,6 +354,7 @@ def characterise_generator_at_brake_current(driver, generator, test_current, sta
 		try:
 			thotlog.new_log()
 
+			thotlog.log('brake_current', test_current)
 			thotlog.log('target_rpm', test_rpm)
 			thotlog.log_motor(generator, 'gen')
 			thotlog.log_motor(driver, 'drv')
@@ -472,8 +475,8 @@ def test_mppt(driver, generator, drive_current, test_duration = None, filename =
 	print ("MPPT Test Current:", drive_current)
 	
 	#init our test...
-	driver.set_rpm(1000)
-	wait_for_rpm(driver, 1000)
+	driver.set_rpm(3000)
+	wait_for_rpm(driver, 3000)
 	driver.set_current(drive_current)
 	generator.set_brake_current(0)
 	
@@ -483,7 +486,7 @@ def test_mppt(driver, generator, drive_current, test_duration = None, filename =
 	next_display_time = start_time + 0.50
 	samples = 0
 
-	brake_current = 4.75
+	brake_current = drive_current * 0.90
 	last_brake_current = brake_current
 	generator.set_brake_current(brake_current)
 

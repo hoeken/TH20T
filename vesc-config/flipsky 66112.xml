@@ -47,8 +47,8 @@
     <hall_table__6>4</hall_table__6>
     <hall_table__7>-1</hall_table__7>
     <hall_sl_erpm>2000</hall_sl_erpm>
-    <foc_current_kp>0.025</foc_current_kp>
-    <foc_current_ki>1</foc_current_ki>
+    <foc_current_kp>0.0217</foc_current_kp>
+    <foc_current_ki>5</foc_current_ki>
     <foc_f_sw>30000</foc_f_sw>
     <foc_dt_us>0.12</foc_dt_us>
     <foc_encoder_inverted>0</foc_encoder_inverted>
@@ -62,11 +62,11 @@
     <foc_sensor_mode>0</foc_sensor_mode>
     <foc_pll_kp>2000</foc_pll_kp>
     <foc_pll_ki>30000</foc_pll_ki>
-    <foc_motor_l>2.128e-05</foc_motor_l>
+    <foc_motor_l>2.171e-05</foc_motor_l>
     <foc_motor_ld_lq_diff>0</foc_motor_ld_lq_diff>
-    <foc_motor_r>0.058</foc_motor_r>
-    <foc_motor_flux_linkage>0.008226</foc_motor_flux_linkage>
-    <foc_observer_gain>1.5e+07</foc_observer_gain>
+    <foc_motor_r>0.0398</foc_motor_r>
+    <foc_motor_flux_linkage>0.008564</foc_motor_flux_linkage>
+    <foc_observer_gain>1.363e+07</foc_observer_gain>
     <foc_observer_gain_slow>0.05</foc_observer_gain_slow>
     <foc_duty_dowmramp_kp>10</foc_duty_dowmramp_kp>
     <foc_duty_dowmramp_ki>200</foc_duty_dowmramp_ki>
@@ -140,7 +140,7 @@
     <m_motor_temp_sens_type>0</m_motor_temp_sens_type>
     <m_ptc_motor_coeff>0.61</m_ptc_motor_coeff>
     <m_hall_extra_samples>1</m_hall_extra_samples>
-    <si_motor_poles>4</si_motor_poles>
+    <si_motor_poles>8</si_motor_poles>
     <si_gear_ratio>1</si_gear_ratio>
     <si_wheel_diameter>0.083</si_wheel_diameter>
     <si_battery_type>1</si_battery_type>
