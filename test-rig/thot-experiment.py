@@ -2,18 +2,93 @@
 # -*- coding: utf-8 -*-
 
 from pyvesc import VESC
-from pyvesc.VESC.messages import *
-
 import time
-from datetime import datetime
 import statistics
-from construct import *
 from pprint import pprint
-from vedirect import Vedirect
 import os
 import csv
 import traceback
 from pathlib import Path
+import subprocess
+
+def test_generator_motor():
+	try:
+		driver_uuid    = 0x5300450011504d4143323520 # Trampa V60 VESC
+		generator_uuid = 0x1b00420012504D4143323520 # Trampa V60 VESC
+		#driver_uuid    = 0x400030001850524154373020 # Flipsky FSESC
+		#generator_uuid = 0x1c002d000550523947383920 # Flipsky FSESC
+		#generator_uuid = 0x580049001550315739383420 # Flipsky 75/300
+		
+		driver_port = VESC.get_vesc_serial_port_by_uuid(driver_uuid)
+		generator_port = VESC.get_vesc_serial_port_by_uuid(generator_uuid)
+		
+		if driver_port:
+			driver = VESC(serial_port = driver_port)
+			print("Driver Firmware: ", driver.get_firmware_version(), " / UUID: ", hex(driver.uuid))
+		else:
+			print("Could not find driver.")
+			return
+
+		#pprint(vars(driver.conf))
+		#pprint(vars(driver.get_measurements()))
+
+		if generator_port:
+			generator = VESC(serial_port = generator_port)
+			print("Generator Firmware: ", generator.get_firmware_version(), " / UUID: ", hex(generator.uuid))
+		else:
+			print("Could not find generator.")
+			return
+
+		#pprint(vars(generator.conf))
+		#pprint(vars(generator.get_measurements()))
+
+		#where so save our csv
+		Path("output").mkdir(parents=True, exist_ok=True)
+
+		dir_path = os.path.dirname(os.path.realpath(__file__))
+		smartshunt_script = dir_path + "/smartshunt.py"
+		
+		battery_shunt_params = [smartshunt_script,"--serial", "VE4X8ER8", "--csv", "{}/output/battery-shunt.csv".format(dir_path)]
+		#print(" ".join(battery_shunt_params))
+		battery_shunt_proc = subprocess.Popen(battery_shunt_params, stdout=subprocess.DEVNULL)
+		
+		generator_shunt_params = [smartshunt_script,"--serial", "VE4YC71B", "--csv", "{}/output/generator-shunt.csv".format(dir_path)]
+		#print(" ".join(generator_shunt_params))
+		generator_shunt_proc = subprocess.Popen(generator_shunt_params, stdout=subprocess.DEVNULL)
+		
+		try:
+			max_rpm = 2500
+			
+			#for rpm in range (1000, max_rpm+1, 100):
+			#	characterise_generator_at_rpm(driver, generator, rpm)
+			#	time.sleep(0.5)
+			#characterise_generator_at_rpm(driver, generator, 1000)
+
+			characterise_generator_at_brake_current(driver, generator, 5, end_rpm = max_rpm)
+			#for current in range (10, 60+1, 10):
+			#	characterise_generator_at_brake_current(driver, generator, current, end_rpm = max_rpm)
+			#	time.sleep(0.5)
+
+			#test_mppt(driver, generator, 5)
+			
+			#monitor_motor(generator, 60)
+
+		except Exception as e:
+			print ("Exception: " + str(e))
+			traceback.print_exc()
+		
+		#characterise_generator_old(driver, generator)
+		
+	except KeyboardInterrupt:
+		True
+
+	# Turn Off the VESC
+	driver.set_current(0)
+	generator.set_current(0)
+	battery_shunt_proc.terminate()
+	generator_shunt_proc.terminate()
+	driver.stop_heartbeat()
+	generator.stop_heartbeat()
 
 class ThotLogger():
 
@@ -108,14 +183,12 @@ class ThotLogger():
 
 	def write_raw_csv(self):
 		date_string = time.time()
-		#date_string = datetime.now().isoformat()
 		row = [date_string]
 		row += self.lastlog.values()
 		self.raw_writer.writerow(row)
 	
 	def write_avg_csv(self):
 		date_string = time.time()
-		#date_string = datetime.now().isoformat()
 		row = [date_string]
 		row += self.get_averages().values()
 		self.csv_writer.writerow(row)
@@ -125,12 +198,12 @@ class ThotLogger():
 		if vals is None:
 			vals = self.get_averages()
 			
-		output =  "{:13.2f} | E: {:4.1f}% | RPM: {:4.0f} | BC: {:5.2f}A | "
+		output =  "[{}] E: {:4.1f}% | RPM: {:4.0f} | BC: {:5.2f}A | "
 		output += "Gen: {:4.0f} RPM, {:5.2f}V, {:5.2f}A, {:6.1f}W MOS: {:4.1f}C MOT: {:4.1f}C | "
 		output += "Drv: {:4.0f} RPM, {:5.2f}V, {:5.2f}A, {:6.1f}W MOS: {:4.1f}C MOT: {:4.1f}C"
 		
 		print (output.format(
-			time.time(), vals['efficiency'], vals['target_rpm'], vals['brake_current'], 
+			time.ctime(), vals['efficiency'], vals['target_rpm'], vals['brake_current'], 
 			vals['gen_rpm'], vals['gen_voltage'], vals['gen_amperage'], vals['gen_wattage'], vals['gen_fet_temp'], vals['gen_motor_temp'],
 			vals['drv_rpm'], vals['drv_voltage'], vals['drv_amperage'], vals['drv_wattage'], vals['drv_fet_temp'], vals['drv_motor_temp']
 		))
@@ -145,82 +218,6 @@ class ThotLogger():
 		self.averages = {}
 		for key in self.names.keys():
 			self.averages[key] = []
-
-# a function to show how to use the class with a with-statement
-def test_generator_motor():
-	try:
-		driver_uuid    = 0x5300450011504d4143323520 # Trampa V60 VESC
-		generator_uuid = 0x1b00420012504D4143323520 # Trampa V60 VESC
-		#driver_uuid    = 0x400030001850524154373020 # Flipsky FSESC
-		#generator_uuid = 0x1c002d000550523947383920 # Flipsky FSESC
-		#generator_uuid = 0x580049001550315739383420 # Flipsky 75/300
-		
-		driver_port = VESC.get_vesc_serial_port_by_uuid(driver_uuid)
-		generator_port = VESC.get_vesc_serial_port_by_uuid(generator_uuid)
-		
-		if driver_port:
-			driver = VESC(serial_port = driver_port)
-			print("Driver Firmware: ", driver.get_firmware_version(), " / UUID: ", hex(driver.uuid))
-		else:
-			print("Could not find driver.")
-			return
-
-		#pprint(vars(driver.conf))
-		#pprint(vars(driver.get_measurements()))
-
-		if generator_port:
-			generator = VESC(serial_port = generator_port)
-			print("Generator Firmware: ", generator.get_firmware_version(), " / UUID: ", hex(generator.uuid))
-		else:
-			print("Could not find generator.")
-			return
-
-		#pprint(vars(generator.conf))
-		#pprint(vars(generator.get_measurements()))
-
-		dir_path = os.path.dirname(os.path.realpath(__file__))
-
-		driver_port = '/dev/ttyUSB0'
-		#driver_pid = os.spawnlp(os.P_NOWAIT, dir_path + "/smartshunt.py", "port", driver_port)
-
-		generator_port = '/dev/ttyUSB1'
-
-		#where so save our csv
-		Path("output").mkdir(parents=True, exist_ok=True)
-
-		try:
-			max_rpm = 3500
-			
-			#for rpm in range (1000, max_rpm+1, 100):
-			#	characterise_generator_at_rpm(driver, generator, rpm)
-			#	time.sleep(0.5)
-			#characterise_generator_at_rpm(driver, generator, 1000)
-
-			characterise_generator_at_brake_current(driver, generator, 5, end_rpm = max_rpm)
-			for current in range (10, 60+1, 10):
-				characterise_generator_at_brake_current(driver, generator, current, end_rpm = max_rpm)
-				time.sleep(0.5)
-
-			test_mppt(driver, generator, 8)
-			
-			#monitor_motor(generator, 60)
-
-		except Exception as e:
-			print ("Exception: " + str(e))
-			traceback.print_exc()
-		
-		#characterise_generator_old(driver, generator)
-		
-	except KeyboardInterrupt:
-		# Turn Off the VESC
-		driver.set_current(0)
-		generator.set_current(0)
-
-	#os.kill(driver_pid)
-	#os.kill(driver_pid)
-	
-	driver.stop_heartbeat()
-	generator.stop_heartbeat()
 
 def monitor_motor(motor, test_duration = None, filename = None):
 
@@ -239,9 +236,9 @@ def monitor_motor(motor, test_duration = None, filename = None):
 	while test_duration is None or time.time() <= end_time:
 		try:
 			thotlog.new_log()
-
 			thotlog.log_motor(motor, 'gen')
-			
+			thotlog.write_raw_csv()
+						
 			#do we want to display it?
 			if time.time() > next_display_time:
 				avg = thotlog.get_averages()
@@ -478,6 +475,7 @@ def test_mppt(driver, generator, drive_current, test_duration = None, filename =
 	driver.set_rpm(3000)
 	wait_for_rpm(driver, 3000)
 	driver.set_current(drive_current)
+	time.sleep(5)
 	generator.set_brake_current(0)
 	
 	start_time = time.time()
@@ -486,7 +484,8 @@ def test_mppt(driver, generator, drive_current, test_duration = None, filename =
 	next_display_time = start_time + 0.50
 	samples = 0
 
-	brake_current = drive_current * 0.90
+	brake_current = 0
+	brake_current = drive_current * 0.3
 	last_brake_current = brake_current
 	generator.set_brake_current(brake_current)
 

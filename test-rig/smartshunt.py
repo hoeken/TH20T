@@ -8,7 +8,19 @@ import os
 import csv
 import serial
 import serial.tools.list_ports
+import signal
 
+class GracefulKiller:
+	kill_now = False
+	def __init__(self):
+		signal.signal(signal.SIGINT, self.exit_gracefully)
+		signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+	def exit_gracefully(self, *args):
+		self.kill_now = True
+		csv_file.close()
+
+csv_file = None
 csv_writer = None
 
 def print_data_callback(packet):
@@ -20,13 +32,15 @@ def print_data_callback(packet):
 
 		print("[{}] {:.3f}V {:.3f}A {}W".format(time.ctime(), voltage, amperage, wattage))
 		
-		if csv_writer:
+		if csv_file:
 			csv_writer.writerow((time.time(), time.ctime(), voltage, amperage, wattage))
 
 	except AttributeError as e:
 		print (e)
 
 if __name__ == '__main__':
+	killer = GracefulKiller()
+
 	parser = argparse.ArgumentParser(description='Process VE.Direct protocol')
 
 	parser.add_argument('--list', dest='list', action='store_true')
@@ -35,6 +49,7 @@ if __name__ == '__main__':
 	parser.add_argument('--serial', help='Serial # of serial port', default=None)
 	parser.add_argument('--timeout', help='Serial port read timeout', type=int, default='60')
 	parser.add_argument('--csv', help='CSV file to output to', type=str, default=None)
+
 	args = parser.parse_args()
 
 	if args.list:
@@ -59,5 +74,7 @@ if __name__ == '__main__':
 
 		try:
 			ve.read_data_callback(print_data_callback)
-		except KeyboardInterrupt:
+		except ValueError:
 			True
+	
+	csv_file.close()

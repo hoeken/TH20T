@@ -47,8 +47,8 @@
     <hall_table__6>4</hall_table__6>
     <hall_table__7>-1</hall_table__7>
     <hall_sl_erpm>2000</hall_sl_erpm>
-    <foc_current_kp>0.0217</foc_current_kp>
-    <foc_current_ki>5</foc_current_ki>
+    <foc_current_kp>0.025</foc_current_kp>
+    <foc_current_ki>1</foc_current_ki>
     <foc_f_sw>30000</foc_f_sw>
     <foc_dt_us>0.12</foc_dt_us>
     <foc_encoder_inverted>0</foc_encoder_inverted>
