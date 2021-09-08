@@ -1,6 +1,5 @@
 * thot-experiment.sh
 	* is optimum at a certain speed, or at a certain brake, or moving target?
-	* figure out how to call victron/loadcell scripts from main test script
 
 * update graph script to also pull in parameters from the load, and shunt scripts, and use the start/end time from the thot-experiment script
 	* possibly also allow to pass in optional start/end time params
