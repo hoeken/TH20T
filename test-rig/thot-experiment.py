@@ -57,16 +57,15 @@ def test_generator_motor():
 		generator_shunt_proc = subprocess.Popen(generator_shunt_params, stdout=subprocess.DEVNULL)
 		
 		try:
+			min_rpm = 300
 			max_rpm = 2500
 			
-			for rpm in range (500, max_rpm+1, 100):
+			for rpm in range (min_rpm, max_rpm+1, 100):
 				characterise_generator_at_rpm(driver, generator, rpm)
 				time.sleep(0.5)
-			#characterise_generator_at_rpm(driver, generator, 1000)
 
-			characterise_generator_at_brake_current(driver, generator, 5, end_rpm = max_rpm)
 			#for current in range (10, 60+1, 10):
-			#	characterise_generator_at_brake_current(driver, generator, current, end_rpm = max_rpm)
+			#	characterise_generator_at_brake_current(driver, generator, current,  start_rpm = min_rpm, end_rpm = max_rpm)
 			#	time.sleep(0.5)
 
 			#test_mppt(driver, generator, 5)
@@ -304,7 +303,7 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 					break
 
 				#if we pull the battery too low, exit
-				if avg['drv_voltage'] < 24:
+				if avg['drv_voltage'] < 26:
 					print ("Battery voltage too low")
 					break;
 				

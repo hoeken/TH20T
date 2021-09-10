@@ -47,7 +47,7 @@ if __name__ == '__main__':
 		if args.csv:
 			csv_file = open(args.csv, "w", newline='')
 			csv_writer = csv.writer(csv_file)
-			csv_writer.writerow(("Timestamp", "Human Time", "Weight"))
+			csv_writer.writerow(("Time", "Force"))
 
 		if ser.isOpen():
 			ser.flushInput()
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 							print("[{}] {:6.3f}KG".format(time.ctime(), weight))
 							
 							if csv_writer:
-								csv_writer.writerow((time.time(), time.ctime(), weight))
+								csv_writer.writerow((time.time(), weight))
 
 						except ValueError:
 							continue
@@ -74,4 +74,4 @@ if __name__ == '__main__':
 				csv_file.close()
 				ser.close()
 		else:
-			print ("Exiting.")		
+			print ("Exiting.")

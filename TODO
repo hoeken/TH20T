@@ -1,16 +1,11 @@
 Testing Script:
-
 	* can we pull in boat speed data from Victron system?  over wifi?
 	* is optimum at a certain speed, or at a certain brake, or moving target?
 	* run final, 'authoritative' tests for all the tests we have working now.  extract the data and see that it all makes sense.
-	* generate some questions for vesc forums - is this the optimium?  is there a better algorithm to try to match an unknown target?
-	* generate a post for the SA forums - introduce project, but also ask for criticism on design of water based parts. how to design a prop for this use case - what is best?  big diameter? low/high pitch? variable pitch?  what software to use for prop blades?
+	* write some questions for vesc forums - is this the optimium?  is there a better algorithm to try to match an unknown target?
+	* write a post for the SA forums - introduce project, but also ask for criticism on design of water based parts. how to design a prop for this use case - what is best?  big diameter? low/high pitch? variable pitch?  what software to use for prop blades?
 
 Graph Script:
-
-	* update graph script to also pull in parameters from load cell and shunt scripts
-	* use the start/end time from the thot-experiment script
-		* possibly also allow to pass in optional start/end time params
 
 	* update graph script to make these graphs:
 		* rpm vs wattage, brake current
@@ -20,11 +15,10 @@ Graph Script:
 
 3D Design:
 
-	* Mast attachment should be a base with a fillet like on a kite foil
 	* double check line to be used - dyneema?  size?
 	* test reverse cat configuration
 	* test new duct configuration
-	* test duct configuration with smaller motor as well
+	* design duct configuration for smaller motor
 
 Long Term:
 

@@ -33,7 +33,7 @@ def print_data_callback(packet):
 		print("[{}] {:.3f}V {:.3f}A {}W".format(time.ctime(), voltage, amperage, wattage))
 		
 		if csv_file:
-			csv_writer.writerow((time.time(), time.ctime(), voltage, amperage, wattage))
+			csv_writer.writerow((time.time(), voltage, amperage, wattage))
 
 	except AttributeError as e:
 		print (e)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 		if args.csv:
 			csv_file = open(args.csv, "w", newline='')
 			csv_writer = csv.writer(csv_file)
-			csv_writer.writerow(("Timestamp", "Human Time", "Voltage", "Amperage", "Wattage"))
+			csv_writer.writerow(("Time", "Voltage", "Amperage", "Wattage"))
 
 		try:
 			ve.read_data_callback(print_data_callback)
