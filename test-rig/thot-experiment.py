@@ -59,9 +59,9 @@ def test_generator_motor():
 		try:
 			max_rpm = 2500
 			
-			#for rpm in range (1000, max_rpm+1, 100):
-			#	characterise_generator_at_rpm(driver, generator, rpm)
-			#	time.sleep(0.5)
+			for rpm in range (500, max_rpm+1, 100):
+				characterise_generator_at_rpm(driver, generator, rpm)
+				time.sleep(0.5)
 			#characterise_generator_at_rpm(driver, generator, 1000)
 
 			characterise_generator_at_brake_current(driver, generator, 5, end_rpm = max_rpm)
