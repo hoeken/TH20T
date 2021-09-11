@@ -1,8 +1,7 @@
 Testing Script:
-	* add in wait for temperature to cool down to 40c before starting next test
-	* can we pull in boat speed data from Victron system?  over wifi?
-	* is optimum at a certain speed, or at a certain brake, or moving target?
 	* run final, 'authoritative' tests for all the tests we have working now.  extract the data and see that it all makes sense.
+	* can we pull in boat speed/sog/wind speed/etc data from Victron system?  over wifi?
+	* is optimum at a certain speed, or at a certain brake, or moving target?
 	* write some questions for vesc forums - is this the optimium?  is there a better algorithm to try to match an unknown target?
 	* write a post for the SA forums - introduce project, but also ask for criticism on design of water based parts. how to design a prop for this use case - what is best?  big diameter? low/high pitch? variable pitch?  what software to use for prop blades?
 
@@ -16,9 +15,10 @@ Graph Script:
 3D Design:
 
 	* double check line to be used - dyneema?  size?
-	* test reverse cat configuration
-	* test new duct configuration
-	* design duct configuration for smaller motor
+	* finish reverse cat config design
+	* finish new duct configuration
+		* check all hole diameters / press fits
+		* check dynmeema line sizing
 
 Long Term:
 
