@@ -53,7 +53,7 @@ def plot_wattage(df, graphs_dir):
 		ax1.plot(generator_shunt_data['Time'], generator_shunt_data['Wattage'], label="Generator Shunt")
 
 	ax1.set(title='Power Consumed vs. Generated', xlabel="Time (s)", ylabel="Wattage")
-	ax1.legend(loc='lower right')
+	ax1.legend(loc='upper center')
 	
 	color = 'tab:red'
 	ax2 = ax1.twinx()
@@ -97,12 +97,6 @@ def plot_rpm_vs_wattage(df, graphs_dir):
 	x = df['Gen RPM']
 	y = df['Gen Wattage']
 	axs.plot(x, y, label="Generator", linewidth=1)
-
-	if generator_shunt_data is not None:
-		axs.plot(generator_shunt_data['Time'], generator_shunt_data['Amperage'], label="Generator Shunt")
-
-	if battery_shunt_data is not None:
-		axs.plot(battery_shunt_data['Time'], battery_shunt_data['Amperage'], label="Battery Shunt")
 
 	axs.set(title='RPM vs Wattage', xlabel="RPM", ylabel="Wattage")
 	axs.legend()

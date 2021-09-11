@@ -57,16 +57,22 @@ def test_generator_motor():
 		generator_shunt_proc = subprocess.Popen(generator_shunt_params, stdout=subprocess.DEVNULL)
 		
 		try:
-			min_rpm = 300
-			max_rpm = 2500
+			min_rpm = 500
+			max_rpm = 3000
+			test_duration = 30
 			
-			for rpm in range (min_rpm, max_rpm+1, 100):
-				characterise_generator_at_rpm(driver, generator, rpm)
-				time.sleep(0.5)
-
-			#for current in range (10, 60+1, 10):
-			#	characterise_generator_at_brake_current(driver, generator, current,  start_rpm = min_rpm, end_rpm = max_rpm)
+			#for rpm in range (min_rpm, max_rpm+1, 100):
+			#	characterise_generator_at_rpm(driver, generator, rpm, test_duration = test_duration)
 			#	time.sleep(0.5)
+
+			#for current in range (1, 10, 1):
+			#	characterise_generator_at_brake_current(driver, generator, current, test_duration = test_duration, start_rpm = min_rpm, end_rpm = max_rpm)
+			#	time.sleep(0.5)
+			min_rpm = 1000
+			max_rpm = 3000
+			for current in range (10, 60+1, 5):
+				characterise_generator_at_brake_current(driver, generator, current, test_duration = test_duration, start_rpm = min_rpm, end_rpm = max_rpm)
+				time.sleep(0.5)
 
 			#test_mppt(driver, generator, 5)
 			
@@ -218,6 +224,24 @@ class ThotLogger():
 		for key in self.names.keys():
 			self.averages[key] = []
 
+def wait_for_motor_temp(motor, temperature = 46):
+
+	measurements = motor.get_measurements()
+	temp_fet = measurements.temp_fet
+	temp_motor = measurements.temp_motor
+
+	if temp_motor >= 150:
+		temp_motor = 0.0
+
+	while temp_fet > temperature or temp_motor > temperature:
+		print ("Waiting for cooldown MOS: {:4.1f}C MOT: {:4.1f}C".format(temp_fet, temp_motor))
+		time.sleep(1)
+		measurements = motor.get_measurements()
+		temp_fet = measurements.temp_fet
+		temp_motor = measurements.temp_motor
+		if temp_motor >= 150:
+			temp_motor = 0.0
+
 def monitor_motor(motor, test_duration = None, filename = None):
 
 	if filename is None:
@@ -257,6 +281,9 @@ def monitor_motor(motor, test_duration = None, filename = None):
 	
 def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0, end_current = 60, test_duration = 30, filename = None):
 
+	wait_for_motor_temp(driver)
+	wait_for_motor_temp(generator)
+
 	if filename is None:
 		filename = "output/generator_rpm_{:.0f}_{:.0f}A_to_{:.0f}A_{:.0f}s.csv".format(test_rpm, start_current, end_current, test_duration)
 		raw_filename = "output/raw_generator_rpm_{:.0f}_{:.0f}A_to_{:.0f}A_{:.0f}s.csv".format(test_rpm, start_current, end_current, test_duration)
@@ -281,6 +308,7 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 		try:
 			thotlog.new_log()
 
+			thotlog.log('target_rpm', test_rpm)
 			thotlog.log('brake_current', brake_current)
 			thotlog.log_motor(generator, 'gen')
 			thotlog.log_motor(driver, 'drv')
@@ -298,7 +326,7 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 				next_display_time = time.time() + 0.25
 				
 				#if we hit the end of the power curve, exit
-				if avg['gen_wattage'] < 0 and time.time() - start_time > test_duration/2:
+				if time.time() - start_time > test_duration/2 and (avg['gen_wattage'] < 0):
 					print ("End of power curve.")					
 					break
 
@@ -320,6 +348,9 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 
 
 def characterise_generator_at_brake_current(driver, generator, test_current, start_rpm = 500, end_rpm = 3000, test_duration = 60, filename = None):
+
+	wait_for_motor_temp(driver)
+	wait_for_motor_temp(generator)
 
 	if filename is None:
 		filename = "output/generator_current_{:.0f}_{:.0f}RPM_to_{:.0f}RPM_{:.0f}s.csv".format(test_current, start_rpm, end_rpm, test_duration)
@@ -392,6 +423,9 @@ def characterise_generator_at_brake_current(driver, generator, test_current, sta
 
 def characterise_generator_at_drive_current(driver, generator, drive_current, start_brake_current = 0, end_brake_current = 60, test_duration = 60, filename = None):
 
+	wait_for_motor_temp(driver)
+	wait_for_motor_temp(generator)
+
 	if filename is None:
 		filename = "output/generator_drive_current_{:.0f}_{:.0f}A_to_{:.0f}A_{:.0f}s.csv".format(drive_current, start_brake_current, end_brake_current, test_duration)
 		raw_filename = "output/raw_generator_drive_current_{:.0f}_{:.0f}A_to_{:.0f}A_{:.0f}s.csv".format(drive_current, start_brake_current, end_brake_current, test_duration)
@@ -461,6 +495,9 @@ def characterise_generator_at_drive_current(driver, generator, drive_current, st
 	print ("Finished test with {} samples.".format(samples))
 
 def test_mppt(driver, generator, drive_current, test_duration = None, filename = None):
+
+	wait_for_motor_temp(driver)
+	wait_for_motor_temp(generator)
 
 	if filename is None:
 		filename = "output/mppt_{:.0f}A.csv".format(drive_current)

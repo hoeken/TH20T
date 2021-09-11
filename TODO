@@ -1,4 +1,5 @@
 Testing Script:
+	* add in wait for temperature to cool down to 40c before starting next test
 	* can we pull in boat speed data from Victron system?  over wifi?
 	* is optimum at a certain speed, or at a certain brake, or moving target?
 	* run final, 'authoritative' tests for all the tests we have working now.  extract the data and see that it all makes sense.
@@ -6,10 +7,9 @@ Testing Script:
 	* write a post for the SA forums - introduce project, but also ask for criticism on design of water based parts. how to design a prop for this use case - what is best?  big diameter? low/high pitch? variable pitch?  what software to use for prop blades?
 
 Graph Script:
-
+	* can we pull in multiple run files all at once?  wildcard?
 	* update graph script to make these graphs:
-		* rpm vs wattage, brake current
-		* rpm vs peak efficiency
+		* efficiency vs wattage
 		* speed (kts) vs rpm (generator)
 		* drag (load cell) vs wattage
 
