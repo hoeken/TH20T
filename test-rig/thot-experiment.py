@@ -61,7 +61,7 @@ def test_generator_motor():
 			max_rpm = 3000
 			test_duration = 30
 			
-			characterise_generator_at_rpm(driver, generator, 1500, test_duration = test_duration)
+			#characterise_generator_at_rpm(driver, generator, 1500, test_duration = test_duration)
 			#for rpm in range (min_rpm, max_rpm+1, 100):
 			#	characterise_generator_at_rpm(driver, generator, rpm, test_duration = test_duration)
 			#	time.sleep(0.5)
@@ -75,7 +75,7 @@ def test_generator_motor():
 			#	characterise_generator_at_brake_current(driver, generator, current, test_duration = test_duration, start_rpm = min_rpm, end_rpm = max_rpm)
 			#	time.sleep(0.5)
 
-			#test_mppt(driver, generator, 5)
+			test_mppt(driver, generator, 5)
 			
 			#monitor_motor(generator, 60)
 
@@ -509,8 +509,8 @@ def test_mppt(driver, generator, drive_current, test_duration = None, filename =
 	print ("MPPT Test Current:", drive_current)
 	
 	#init our test...
-	driver.set_rpm(3000)
-	wait_for_rpm(driver, 3000)
+	driver.set_rpm(1000)
+	wait_for_rpm(driver, 1000)
 	driver.set_current(drive_current)
 	time.sleep(5)
 	generator.set_brake_current(0)
