@@ -61,6 +61,7 @@ def test_generator_motor():
 			max_rpm = 3000
 			test_duration = 30
 			
+			characterise_generator_at_rpm(driver, generator, 1500, test_duration = test_duration)
 			#for rpm in range (min_rpm, max_rpm+1, 100):
 			#	characterise_generator_at_rpm(driver, generator, rpm, test_duration = test_duration)
 			#	time.sleep(0.5)
@@ -68,11 +69,11 @@ def test_generator_motor():
 			#for current in range (1, 10, 1):
 			#	characterise_generator_at_brake_current(driver, generator, current, test_duration = test_duration, start_rpm = min_rpm, end_rpm = max_rpm)
 			#	time.sleep(0.5)
-			min_rpm = 1000
-			max_rpm = 3000
-			for current in range (10, 60+1, 5):
-				characterise_generator_at_brake_current(driver, generator, current, test_duration = test_duration, start_rpm = min_rpm, end_rpm = max_rpm)
-				time.sleep(0.5)
+			#min_rpm = 1000
+			#max_rpm = 3000
+			#for current in range (10, 60+1, 5):
+			#	characterise_generator_at_brake_current(driver, generator, current, test_duration = test_duration, start_rpm = min_rpm, end_rpm = max_rpm)
+			#	time.sleep(0.5)
 
 			#test_mppt(driver, generator, 5)
 			
@@ -331,7 +332,7 @@ def characterise_generator_at_rpm(driver, generator, test_rpm, start_current = 0
 					break
 
 				#if we pull the battery too low, exit
-				if avg['drv_voltage'] < 26:
+				if avg['drv_voltage'] < 24:
 					print ("Battery voltage too low")
 					break;
 				
