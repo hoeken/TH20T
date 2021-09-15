@@ -14,9 +14,9 @@ Graph Script:
 
 3D Design:
 
-	* double check line to be used - dyneema?  size?
 	* finish reverse cat config design
 	* finish new duct configuration
+		* change duct profile to NACA (0012?)  https://foil.zone/t/parametric-propeller-duct-design-fusion-360/457/25
 		* check all hole diameters / press fits
 		* check dynmeema line sizing
 
