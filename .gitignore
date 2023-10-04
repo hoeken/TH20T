@@ -1,3 +1,4 @@
 test-rig/output*
 *.csv
 *.FCStd1
+*.DS_Store
