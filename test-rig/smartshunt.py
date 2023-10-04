@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import argparse, os
-from vedirect import Vedirect
+import vedirect
 import time
 import os
 import csv
 import serial
 import serial.tools.list_ports
 import signal
+from pprint import pprint
 
 class GracefulKiller:
 	kill_now = False
@@ -34,6 +35,7 @@ def print_data_callback(packet):
 		
 		if csv_file:
 			csv_writer.writerow((time.time(), voltage, amperage, wattage))
+			csv_file.flush()
 
 	except AttributeError as e:
 		print (e)
@@ -56,16 +58,17 @@ if __name__ == '__main__':
 		print ("Port\t\tVID:PID\t\tSerial")
 		ports = serial.tools.list_ports.comports()
 		for port in ports:
-			print("{}\t{:04x}:{:04x}\t{}".format(port.device, port.vid, port.pid, port.serial_number))
+			print(f"{port.device}\t{port.serial_number}")
 	else:
 		if args.serial:
 			ports = serial.tools.list_ports.comports()
 			for port in ports:
+				pprint(port.serial_number)
 				if port.serial_number == args.serial:
 					args.port = port.device
 					print ("Found {}".format(args.port))
 
-		ve = Vedirect(args.port, args.timeout)
+		ve = vedirect.Vedirect(args.port, args.timeout)
 		
 		if args.csv:
 			csv_file = open(args.csv, "w", newline='')
@@ -77,4 +80,4 @@ if __name__ == '__main__':
 		except ValueError:
 			True
 	
-	csv_file.close()
+		csv_file.close()

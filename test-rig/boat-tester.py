@@ -13,13 +13,6 @@ import subprocess
 import serial
 import serial.tools.list_ports
 
-def get_vesc_serial_port_by_uuid(uuid):
-	ports = serial.tools.list_ports.comports()
-	for port in ports:
-		if port.serial_number == uuid:
-			return port.device;
-	return None
-
 def test_generator_motor():
 	try:
 		generator_uuid = 0x1b00420012504D4143323520 # Trampa V60 VESC
@@ -27,11 +20,11 @@ def test_generator_motor():
 		#generator_uuid = 0x1c002d000550523947383920 # Flipsky FSESC
 		#generator_uuid = 0x580049001550315739383420 # Flipsky 75/300
 		
-		generator_port = get_vesc_serial_port_by_uuid(generator_uuid)
+		generator_port = VESC.get_vesc_serial_port_by_uuid(generator_uuid)
 		
 		if generator_port:
 			generator = VESC(serial_port = generator_port)
-			print("Generator Firmware: ", generator.get_firmware_version(), " / UUID: ", hex(generator.uuid))
+			print("Generator Firmware: ", generator.get_firmware_version())
 		else:
 			print("Could not find generator.")
 			return
@@ -45,12 +38,12 @@ def test_generator_motor():
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 		smartshunt_script = dir_path + "/smartshunt.py"
 		
-		battery_shunt_params = [smartshunt_script,"--serial", "VE4X8ER8", "--csv", "{}/output/battery-shunt.csv".format(dir_path)]
-		#print(" ".join(battery_shunt_params))
+		battery_shunt_params = [smartshunt_script,"--serial", "VE4YC71B", "--csv", "{}/output/battery-shunt.csv".format(dir_path)]
+		print(" ".join(battery_shunt_params))
 		battery_shunt_proc = subprocess.Popen(battery_shunt_params, stdout=subprocess.DEVNULL)
 		
-		generator_shunt_params = [smartshunt_script,"--serial", "VE4YC71B", "--csv", "{}/output/generator-shunt.csv".format(dir_path)]
-		#print(" ".join(generator_shunt_params))
+		generator_shunt_params = [smartshunt_script,"--serial", "VE4X8ER8", "--csv", "{}/output/generator-shunt.csv".format(dir_path)]
+		print(" ".join(generator_shunt_params))
 		generator_shunt_proc = subprocess.Popen(generator_shunt_params, stdout=subprocess.DEVNULL)
 		
 		try:
@@ -248,7 +241,7 @@ def monitor_motor(motor, test_duration = None, filename = None):
 	
 def characterise_generator_at_brake_current(generator, test_current, test_duration = 60, filename = None):
 
-	wait_for_motor_temp(generator)
+	#wait_for_motor_temp(generator)
 
 	if filename is None:
 		filename = "output/generator_current_{:.0f}_{:.0f}s.csv".format(test_current, test_duration)
