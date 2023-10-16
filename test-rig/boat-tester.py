@@ -38,11 +38,11 @@ def test_generator_motor():
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 		smartshunt_script = dir_path + "/smartshunt.py"
 		
-		battery_shunt_params = [smartshunt_script,"--serial", "VE4YC71B", "--csv", "{}/output/battery-shunt.csv".format(dir_path)]
+		battery_shunt_params = [smartshunt_script,"--serial", "VE4YC71B", "--csv", "{}/output/shunt-battery.csv".format(dir_path)]
 		print(" ".join(battery_shunt_params))
 		battery_shunt_proc = subprocess.Popen(battery_shunt_params, stdout=subprocess.DEVNULL)
 		
-		generator_shunt_params = [smartshunt_script,"--serial", "VE4X8ER8", "--csv", "{}/output/generator-shunt.csv".format(dir_path)]
+		generator_shunt_params = [smartshunt_script,"--serial", "VE4X8ER8", "--csv", "{}/output/shunt.csv".format(dir_path)]
 		print(" ".join(generator_shunt_params))
 		generator_shunt_proc = subprocess.Popen(generator_shunt_params, stdout=subprocess.DEVNULL)
 		
@@ -57,8 +57,7 @@ def test_generator_motor():
 				characterise_generator_at_brake_current(generator, current, test_duration = test_duration)
 				time.sleep(0.5)
 
-			test_mppt(driver, generator, 5)
-			
+			#test_mppt(driver, generator, 5)
 			#monitor_motor(generator, 60)
 
 		except Exception as e:
@@ -70,9 +69,9 @@ def test_generator_motor():
 
 	# Turn Off the VESC
 	generator.set_current(0)
+	generator.stop_heartbeat()
 	battery_shunt_proc.terminate()
 	generator_shunt_proc.terminate()
-	generator.stop_heartbeat()
 
 class ThotLogger():
 
@@ -201,51 +200,14 @@ def wait_for_motor_temp(motor, temperature = 46):
 		temp_motor = measurements.temp_motor
 		if temp_motor >= 150:
 			temp_motor = 0.0
-
-def monitor_motor(motor, test_duration = None, filename = None):
-
-	if filename is None:
-		filename = "output/monitor.csv"
-		raw_filename = "output/raw_monitor.csv"
-	
-	thotlog = ThotLogger(filename, raw_filename)
-	
-	start_time = time.time()
-	if test_duration is not None:
-		end_time = start_time + test_duration
-	next_display_time = start_time + 1
-	samples = 0
-
-	while test_duration is None or time.time() <= end_time:
-		try:
-			thotlog.new_log()
-			thotlog.log_motor(motor, 'gen')
-			thotlog.write_raw_csv()
-						
-			#do we want to display it?
-			if time.time() > next_display_time:
-				avg = thotlog.get_averages()
-				thotlog.print_line()
-				thotlog.write_avg_csv()
-				thotlog.clear_averages()
-
-				next_display_time = time.time() + 1
-					
-				samples += 1
-		except AttributeError as e:
-			print (e)
-			traceback.print_exc()
-			continue
-
-	print ("Finished test with {} samples.".format(samples))
 	
 def characterise_generator_at_brake_current(generator, test_current, test_duration = 60, filename = None):
 
 	#wait_for_motor_temp(generator)
 
 	if filename is None:
-		filename = "output/generator_current_{:.0f}_{:.0f}s.csv".format(test_current, test_duration)
-		raw_filename = "output/raw_generator_current_{:.0f}__{:.0f}s.csv".format(test_current, test_duration)
+		filename = "output/generator_current_{:.0f}a_{:.0f}s.csv".format(test_current, test_duration)
+		raw_filename = "output/raw_generator_current_{:.0f}a_{:.0f}s.csv".format(test_current, test_duration)
 	
 	thotlog = ThotLogger(filename, raw_filename)
 	
@@ -296,37 +258,3 @@ def characterise_generator_at_brake_current(generator, test_current, test_durati
 
 if __name__ == '__main__':
 	test_generator_motor()
-	
-#print ("Driver Measurements:");
-#pprint(vars(driver.get_measurements()))
-
-#test what frequency of updates we can get....
-#driver.set_duty_cycle(0.2)
-#count = 0
-#start = time.time()
-#for i in range(1, 10000):
-#	data = driver.get_measurements()
-#	count += 1
-#end = time.time()
-#total = end - start
-#print(10000 / total, " updates / sec")
-
-#print ("Generator Measurements:");
-#pprint(vars(generator.get_measurements()))
-
-#duty_cycle_ramp(driver)
-#current_ramp(driver)
-#rpm_ramp(driver)
-#servo_test(driver)
-
-#pprint(driver.get_rpm())
-#pprint(driver.get_duty_cycle())
-#pprint(driver.get_v_in())
-#pprint(driver.get_motor_current())
-#pprint(driver.get_incoming_current())
-
-# run motor and print out rpm for ~2 seconds
-#for i in range(30):
-#	time.sleep(0.1)
-#	print("RPM:", motor.get_measurements().rpm)
-#motor.set_rpm(0)
